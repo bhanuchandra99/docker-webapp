@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  app:
+    build: .
+    container_name: devopsapp
+    ports:
+      - "8070:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - appnet
+
+  db:
+    image: mysql:5.7.25
+    container_name: devopsdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: devopspassword
+      MYSQL_DATABASE: accounts
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./Docker-db/db_backup.sql:/docker-entrypoint-initdb.d/1_init.sql:ro
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin","ping","-h","localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - appnet
+
+volumes:
+  db-data:
+networks:
+  appnet:
